@@ -22,7 +22,7 @@ export const QueryProvider = ({ children }) => {
         setIsLoading(true);
 
         const response = await axios.post(
-          'https://hospital-management-llm-backend.onrender.com/post/query',
+          'https://health-sql-query-backend.onrender.com/post/query',
           { question },
           {
             headers: {
