@@ -3,15 +3,18 @@ load_dotenv()
 import os
 import google.generativeai as genai
 
+# Configure the Gemini API client
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+if not GOOGLE_API_KEY:
+    raise ValueError("GOOGLE_API_KEY environment variable not set.  Please configure your .env file.")
+genai.configure(api_key=GOOGLE_API_KEY)
 
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-model = genai.GenerativeModel('gemini-pro')
 
 def clean_sql_query(sql_query):
     sql_query = sql_query.replace('```sql', '').replace('```', '')
     return sql_query.strip()
 
-def get_gemini_response(question, prompt):
+def get_gemini_response(question, prompt, model):
     try:
         response = model.generate_content([prompt[0], question])
         sql_query = response.text.strip()
@@ -93,9 +96,38 @@ ORDER BY days_admitted DESC;
 ]
 
 class LLM_Data_Controller:
-    def __init__(self):
-      
+    def __init__(self, model_name="gemini-1.5-pro"):  # Default model, can be changed at instantiation
+        try:
+            self.model = genai.GenerativeModel(model_name)
+        except Exception as e:
+            raise ValueError(f"Failed to initialize GenerativeModel with model name '{model_name}': {e}.  Check the model name and your API key configuration.") from e  # Important: chained exception
+
         self.prompt = prompt
-    
+
     def generate_gemini_query(self, user_question):
-        return get_gemini_response(user_question, self.prompt)
+        return get_gemini_response(user_question, self.prompt, self.model)
+
+# Example Usage (after making the changes)
+if __name__ == '__main__':
+    try:
+        # Attempt to list models to provide feedback
+        print("Available Models:")
+        for m in genai.list_models():
+            print(f"- {m.name}")  # list models to choose correct names for
+    except Exception as e:
+        print(f"Could not list models, ensure your GOOGLE_API_KEY is working : {e}")
+
+
+
+    try:
+      controller = LLM_Data_Controller()  # Uses the default 'gemini-pro' model. Can provide a different model during instantiation
+
+      question = "Get the names and ages of all patients older than 60"
+
+      sql_query = controller.generate_gemini_query(question)
+
+      print("Generated SQL Query:", sql_query)
+
+
+    except Exception as e:
+        print(f"An error occurred: {e}") # Report any higher-level exception
