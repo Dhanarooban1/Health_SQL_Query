@@ -6,8 +6,7 @@ def execute_query(query, cursor):
         cursor.execute(query)
         rows = cursor.fetchall()
         for row in rows:
-            print(row)
-        return rows
+            return rows
     except sqlite3.Error as e:
         print("SQLite Error:", str(e)) 
         return []
